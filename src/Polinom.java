@@ -149,13 +149,16 @@ public class Polinom {
     //значение в точке
     public double value(double point) {
         double result = 0d;
-        int xDegree = 0;
-        double x = 1;
         Monom current = start;
+        int i = start.degree;
         while (current != null) {
-            for (; xDegree < current.degree; xDegree++)
-                x *= point;
-            result += current.ration * x;
+            if (i == current.degree) {
+                result += current.ration;
+            }
+            if (current.next != null) {
+                result *= point;
+                i--;
+            }
             current = current.next;
         }
         return result;
@@ -174,33 +177,9 @@ public class Polinom {
         }
     }
 
-    //изменить свободный член
-    public Polinom setFreeMonom(double value) {
-        if (start == null) {
-            start = new Monom(value, 0);
-        } else if (start.degree == 0) start.ration = value;
-        else {
-            Monom newStart = new Monom(value, 0);
-            insertBefore(newStart, start);
-            start = newStart;
-        }
-        return this;
-    }
-
-    private void insertBefore(Monom current, Monom place) {
-        if (place.previous != null) {
-            current.previous = place.previous;
-            place.previous.next = current;
-
-        }
-        current.next = place;
-        place.previous = current;
-    }
-
     class Monom {
         double ration; //коэффициент
         int degree; //степень
-        Monom previous;
         Monom next; //следующий моном
 
         Monom(double ration, int degree) {

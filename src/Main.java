@@ -1,15 +1,18 @@
 public class Main {
     public static void main(String[] args) {
+        init1();
+    }
+
+    public static void init1() {
         double a = 0;
-        double b = 10;
-        int count = 5;
+        double b = 1;
+        int count = 6;
         double step = (b - a) / count;
         double[] x = new double[(int) ((b - a) / step)];
         for (int i = 0; i < x.length; i++) {
             x[i] = a + step * i;
         }
-        Grid grid = new Grid(x, Math::sin);
-//        Grid grid = new Grid(new double[] {0, 1, 2, 3, 4, 5}, o -> (o * o - 1));
+        Grid grid = new Grid(x, o -> (o*o*o*o*o - 4.378*o*o*o*o - 2.177 * o * o + 0.331));
 
         Lagrange lagrange = new Lagrange(grid);
         System.out.println("Полином Лагранжа");
@@ -20,12 +23,28 @@ public class Main {
         System.out.println("Полином Ньютона");
         newton.print();
         print(newton);
-//
-//          Polinom polinom2 = new Polinom(new double[]{0, 0});
-//          polinom2.setFreeMonom(2).print();
-////        Polinom polinom1 = new Polinom(new double[]{0, -1, 1});
-////        polinom2.multiply(polinom2).print();
-////        polinom1.add(polinom2).print();
+    }
+
+    public static void init2() {
+        double a = 0;
+        double b = 1;
+        int count = 7;
+        double step = (b - a) / (count - 1);
+        double[] x = new double[count];
+        for (int i = 0; i < x.length; i++) {
+            x[i] = a + step * i;
+        }
+        Grid grid = new Grid(x, o -> (Math.sin(o * o / 2)));
+
+        Lagrange lagrange = new Lagrange(grid);
+        System.out.println("Полином Лагранжа");
+        lagrange.print();
+        print(lagrange);
+
+        Newton newton = new Newton(grid);
+        System.out.println("Полином Ньютона");
+        newton.print();
+        print(newton);
     }
 
     public static void print(Interpolation interpolation) {
