@@ -1,6 +1,9 @@
 public class Main {
     public static void main(String[] args) {
-        init1();
+//        Polinom polinom1 = new Polinom(new double[]{1, 1, 3});
+//        Polinom polinom2 = new Polinom(new double[]{1, -1, 0});
+//        polinom2.multiply(polinom1).print();
+        init2();
     }
 
     public static void init1() {

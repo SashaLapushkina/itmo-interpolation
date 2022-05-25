@@ -11,36 +11,31 @@ public class Polinom {
         for (int i = 0; i < rations.length; i++) {
             if (rations[i] != 0) {
                 if (start == null) {
-                    start = new Monom(rations[i], i);
+                    start = new Monom(rations[i], rations.length - i - 1);
                     current = start;
                 } else {
-                    current.next = new Monom(rations[i], i);
-                    current.next.previous = current;
+                    current.next = new Monom(rations[i], rations.length - i - 1);
                     current = current.next;
                 }
             }
         }
     }
 
-    //создаем полином из хвоста другого полинома
-    private Polinom(Monom start) {
-        this.start = start;
-    }
-
     //копирующий конструктор
-    public Polinom(Polinom newPolinom) {
-        if (newPolinom.start != null) {
-            this.start = new Monom(newPolinom.start);
+    public Polinom(Monom from) {
+            this.start = new Monom(from);
             Monom thisCurrent = this.start;
-            Monom current = newPolinom.start.next;
+            Monom current = from.next;
             while (current != null) {
                 thisCurrent.next = new Monom(current);
-                thisCurrent.next.previous = thisCurrent;
 
                 thisCurrent = thisCurrent.next;
                 current = current.next;
             }
-        }
+    }
+
+    public Monom getStart() {
+        return start;
     }
 
     // +=
@@ -50,52 +45,57 @@ public class Polinom {
 
         //если не к чему прибавлять
         if (this.start == null) {
-            this.start = new Polinom(polinom).start;
+            this.start = new Polinom(polinom.start).start;
             return this;
         }
 
         Monom current = polinom.start; //то, что мы прибавляем
         Monom thisCurrent = start; //то, к чему мы прибавляем
+        Monom previousThisCurrent = null;
 
         while (current != null) {
             if (current.degree == thisCurrent.degree) {
                 double sum = current.ration + thisCurrent.ration;
-                if (Math.abs(sum) < EPS) {
+                if (Math.abs(sum) < EPS) { // == 0
                     if (thisCurrent == start) {
                         start = thisCurrent.next;
-                        if (start != null) {
-                            start.previous = null;
-                        }
                     } else {
                         if (thisCurrent.next == null) {
-                            thisCurrent.previous.next = null;
+                            previousThisCurrent.next = null;
                         } else {
-                            thisCurrent.previous.next = thisCurrent.next;
-                            thisCurrent.next.previous = thisCurrent.previous; //удаляем, если получили 0
+                            previousThisCurrent.next = thisCurrent.next;
                         }
-                        thisCurrent = thisCurrent.previous;
+                        thisCurrent = previousThisCurrent;
                     }
                 } else {
                     thisCurrent.ration = sum;
                 }
                 if (thisCurrent.next == null && current.next != null) {
-                    thisCurrent.next = new Polinom(new Polinom(current.next)).start;
-                    thisCurrent.next.previous = thisCurrent;
+                    thisCurrent.next = new Polinom(current.next).start;
                     return this;
                 }
+                previousThisCurrent = thisCurrent;
                 thisCurrent = thisCurrent.next;
                 current = current.next;
-            } else if (current.degree < thisCurrent.degree) {
+            } else if (current.degree > thisCurrent.degree) {
                 Monom newMonom = new Monom(current);
-                insertBefore(newMonom, thisCurrent);
-                if (thisCurrent == start) start = newMonom;
+                if (thisCurrent == start) {
+                    newMonom.next = thisCurrent;
+                    start = newMonom;
+                    previousThisCurrent = start;
+                }
+                else {
+                    previousThisCurrent.next = newMonom;
+                    newMonom.next = current;
+                    previousThisCurrent = newMonom;
+                }
                 current = current.next;
             } else {
                 if (thisCurrent.next == null) {
-                    thisCurrent.next = new Polinom(new Polinom(current)).start;
-                    thisCurrent.next.previous = thisCurrent;
+                    thisCurrent.next = new Polinom(current).start;
                     return this;
                 }
+                previousThisCurrent = thisCurrent;
                 thisCurrent = thisCurrent.next;
             }
         }
@@ -110,23 +110,43 @@ public class Polinom {
         }
         Polinom result = new Polinom();
         Monom current = start;
-        do {
-            result.add(new Polinom(polinom).multiply(current));
+
+        while (current != null) {
+            Monom resultCurrent = result.start;
+            Monom polinomCurrent = polinom.start;
+
+            while (polinomCurrent != null) {
+                int degree = current.degree + polinomCurrent.degree;
+                double ration = current.ration * polinomCurrent.ration;
+
+                if (result.start == null) {
+                    result.start = new Monom(ration, degree);
+                    resultCurrent = result.start;
+                    polinomCurrent = polinomCurrent.next;
+                } else if (resultCurrent.next == null) {
+                    resultCurrent.next = new Monom(ration, degree);
+                    resultCurrent = resultCurrent.next;
+                    polinomCurrent = polinomCurrent.next;
+                } else if (resultCurrent.next.degree == degree) {
+                    resultCurrent.next.ration += ration;
+                    if (Math.abs(resultCurrent.next.ration) < EPS) {
+                        resultCurrent.next = resultCurrent.next.next;
+                    }
+                    polinomCurrent = polinomCurrent.next;
+                } else if (resultCurrent.next.degree < degree) {
+                    Monom newMonom = new Monom(ration, degree);
+                    newMonom.next = resultCurrent.next;
+                    resultCurrent.next = newMonom;
+                    resultCurrent = resultCurrent.next;
+                    polinomCurrent = polinomCurrent.next;
+                } else {
+                    resultCurrent = resultCurrent.next;
+                }
+            }
             current = current.next;
-        } while (current != null);
+        }
+
         start = result.start;
-        return this;
-    }
-
-    private Polinom multiply(Monom monom) {
-        if (start == null) return this;
-        Monom current = start;
-        do {
-            current.degree += monom.degree;
-            current.ration *= monom.ration;
-
-            current = current.next;
-        } while (current != null);
         return this;
     }
 
@@ -148,18 +168,19 @@ public class Polinom {
 
     //значение в точке
     public double value(double point) {
+        if (start == null) return 0d;
+
         double result = 0d;
         Monom current = start;
-        int i = start.degree;
-        while (current != null) {
-            if (i == current.degree) {
+
+        for (int i = start.degree; i >= 0; i--) {
+            if (current != null && i == current.degree) {
                 result += current.ration;
+                current = current.next;
             }
-            if (current.next != null) {
+            if (i != 0) {
                 result *= point;
-                i--;
             }
-            current = current.next;
         }
         return result;
     }
