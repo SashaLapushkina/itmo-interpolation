@@ -51,51 +51,41 @@ public class Polinom {
 
         Monom current = polinom.start; //то, что мы прибавляем
         Monom thisCurrent = start; //то, к чему мы прибавляем
-        Monom previousThisCurrent = null;
 
         while (current != null) {
-            if (current.degree == thisCurrent.degree) {
+            if (current.degree > thisCurrent.degree) {
+                Monom newMonom = new Monom(current);
+                start = newMonom;
+                newMonom.next = thisCurrent;
+                thisCurrent = newMonom;
+                current = current.next;
+            } else if (current.degree == thisCurrent.degree) {
                 double sum = current.ration + thisCurrent.ration;
                 if (Math.abs(sum) < EPS) { // == 0
-                    if (thisCurrent == start) {
-                        start = thisCurrent.next;
-                    } else {
-                        if (thisCurrent.next == null) {
-                            previousThisCurrent.next = null;
-                        } else {
-                            previousThisCurrent.next = thisCurrent.next;
-                        }
-                        thisCurrent = previousThisCurrent;
-                    }
+                    start = thisCurrent.next;
                 } else {
                     thisCurrent.ration = sum;
                 }
-                if (thisCurrent.next == null && current.next != null) {
-                    thisCurrent.next = new Polinom(current.next).start;
-                    return this;
-                }
-                previousThisCurrent = thisCurrent;
+                current = current.next;
+            } else if (thisCurrent.next == null) {
+                thisCurrent.next = new Monom(current);
                 thisCurrent = thisCurrent.next;
                 current = current.next;
-            } else if (current.degree > thisCurrent.degree) {
+            } else if (current.degree > thisCurrent.next.degree) {
                 Monom newMonom = new Monom(current);
-                if (thisCurrent == start) {
-                    newMonom.next = thisCurrent;
-                    start = newMonom;
-                    previousThisCurrent = start;
-                }
-                else {
-                    previousThisCurrent.next = newMonom;
-                    newMonom.next = current;
-                    previousThisCurrent = newMonom;
+                newMonom.next = thisCurrent.next;
+                thisCurrent.next = newMonom;
+                current = current.next;
+                thisCurrent = thisCurrent.next;
+            } else if (current.degree == thisCurrent.next.degree) {
+                double sum = current.ration + thisCurrent.next.ration;
+                if (Math.abs(sum) < EPS) { // == 0
+                    thisCurrent.next = thisCurrent.next.next;
+                } else {
+                    thisCurrent.next.ration = sum;
                 }
                 current = current.next;
             } else {
-                if (thisCurrent.next == null) {
-                    thisCurrent.next = new Polinom(current).start;
-                    return this;
-                }
-                previousThisCurrent = thisCurrent;
                 thisCurrent = thisCurrent.next;
             }
         }
